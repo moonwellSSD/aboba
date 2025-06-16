@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/moonwellSSD/aboba'
+                git branch: 'master', url: 'https://github.com/moonwellSSD/redis-cluster_Jenkinsfile'
             }
         }
 
