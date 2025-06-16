@@ -4,14 +4,27 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/moonwellSSD/aboba'
+                git branch: 'master', 
+                url: 'https://github.com/moonwellSSD/aboba'
             }
         }
         
-        stage('Build and Deploy') {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    def dockerInstalled = sh(script: 'command -v docker', returnStatus: true) == 0
+                    def composeInstalled = sh(script: 'command -v docker-compose', returnStatus: true) == 0
+                    
+                    if (!dockerInstalled || !composeInstalled) {
+                        error('Docker и docker-compose должны быть предустановлены на агенте Jenkins!')
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy Cluster') {
             steps {
                 sh '''
-                    sudo apt-get update && sudo apt-get install -y docker.io docker-compose
                     docker-compose down || true
                     docker-compose up -d --build
                     sleep 10
@@ -19,10 +32,11 @@ pipeline {
             }
         }
         
-        stage('Test') {
+        stage('Verify') {
             steps {
                 sh '''
-                    docker exec redis-master redis-cli PING | grep PONG || exit 1
+                    docker ps
+                    docker exec redis-master redis-cli ping | grep PONG || exit 1
                     echo "Redis Cluster работает!"
                 '''
             }
@@ -31,7 +45,7 @@ pipeline {
     
     post {
         always {
-            sh 'docker-compose down'
+            sh 'docker-compose down || true'
         }
     }
 }
