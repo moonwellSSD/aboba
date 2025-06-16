@@ -10,7 +10,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'docker-compose down || true'
+                sh 'docker-compose down -v || true'
                 sh 'docker-compose up -d'
             }
         }
